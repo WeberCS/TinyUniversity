@@ -27,10 +27,14 @@ namespace TinyUniversity.Pages.Students
 
         public IList<Student> Student { get;set; }
 
-        public async Task OnGetAsync(string sortOrder, string searchString)
+        public async Task OnGetAsync(string sortOrder, string currentFilter, string searchString)
         {
             NameSort = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             DateSort = sortOrder == "Date" ? "date_desc" : "Date";
+            if (searchString == null)
+            {
+                searchString = currentFilter;
+            }
             CurrentFilter = searchString; //keep the search box populated each refresh
 
 
