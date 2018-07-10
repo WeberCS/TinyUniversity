@@ -21,8 +21,8 @@ namespace TinyUniversity
                 try
                 {
                     var context = services.GetRequiredService<SchoolContext>();
-                    //context.Database.EnsureDeleted();
-                    //context.Database.EnsureCreated();
+                    context.Database.EnsureDeleted();
+                    context.Database.EnsureCreated();
                     DbInitializer.Initialize(context);
                 }
                 catch (Exception ex)
