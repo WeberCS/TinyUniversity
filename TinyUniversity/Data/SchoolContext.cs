@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using TinyUniversity.Models.ViewModels;
 
 namespace TinyUniversity.Models
 {
@@ -31,6 +32,8 @@ namespace TinyUniversity.Models
             modelBuilder.Entity<CourseAssignment>()
                 .HasKey(c => new { c.CourseID, c.InstructorID });
         }
+
+        public DbSet<TinyUniversity.Models.ViewModels.InstructorIndexData> InstructorIndexData { get; set; }
 
     }
 }
