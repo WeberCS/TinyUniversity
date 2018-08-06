@@ -9,7 +9,7 @@ using TinyUniversity.Models;
 
 namespace TinyUniversity.Pages.Courses
 {
-    public class CreateModel : PageModel
+    public class CreateModel : DepartmentNamePageModel
     {
         private readonly TinyUniversity.Models.SchoolContext _context;
 
@@ -20,7 +20,8 @@ namespace TinyUniversity.Pages.Courses
 
         public IActionResult OnGet()
         {
-        ViewData["DepartmentID"] = new SelectList(_context.Department, "DepartmentID", "DepartmentID");
+            //ViewData["DepartmentID"] = new SelectList(_context.Department, "DepartmentID", "DepartmentID");
+            PopulateDepartmentDropDownList(_context);
             return Page();
         }
 
@@ -33,11 +34,20 @@ namespace TinyUniversity.Pages.Courses
             {
                 return Page();
             }
+            //prevent overposting
+            var emptyCourse = new Course();
 
-            _context.Course.Add(Course);
-            await _context.SaveChangesAsync();
-
-            return RedirectToPage("./Index");
+            if (await TryUpdateModelAsync<Course>(
+                emptyCourse,
+                "course",//prefix in form fields)
+                s => s.CourseID, s => s.DepartmentID, s => s.Title, s => s.Credits))
+            {
+                _context.Course.Add(emptyCourse);
+                await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
+            }
+            PopulateDepartmentDropDownList(_context, emptyCourse.DepartmentID);
+            return Page();
         }
     }
 }

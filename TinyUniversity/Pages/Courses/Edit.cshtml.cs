@@ -10,7 +10,7 @@ using TinyUniversity.Models;
 
 namespace TinyUniversity.Pages.Courses
 {
-    public class EditModel : PageModel
+    public class EditModel : DepartmentNamePageModel
     {
         private readonly TinyUniversity.Models.SchoolContext _context;
 
@@ -36,7 +36,8 @@ namespace TinyUniversity.Pages.Courses
             {
                 return NotFound();
             }
-           ViewData["DepartmentID"] = new SelectList(_context.Department, "DepartmentID", "DepartmentID");
+            //ViewData["DepartmentID"] = new SelectList(_context.Department, "DepartmentID", "DepartmentID");
+            PopulateDepartmentDropDownList(_context, Course.DepartmentID);
             return Page();
         }
 
@@ -64,7 +65,7 @@ namespace TinyUniversity.Pages.Courses
                     throw;
                 }
             }
-
+            
             return RedirectToPage("./Index");
         }
 
@@ -72,5 +73,7 @@ namespace TinyUniversity.Pages.Courses
         {
             return _context.Course.Any(e => e.CourseID == id);
         }
+
+       
     }
 }

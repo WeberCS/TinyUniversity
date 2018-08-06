@@ -11,7 +11,7 @@ using TinyUniversity.Models.ViewModels;
 
 namespace TinyUniversity.Pages.Instructors
 {
-    public class EditModel : PageModel
+    public class EditModel : InstructorCoursesPageModel
     {
         private readonly TinyUniversity.Models.SchoolContext _context;
 
@@ -22,50 +22,71 @@ namespace TinyUniversity.Pages.Instructors
 
         [BindProperty]
         public InstructorIndexData InstructorIndexData { get; set; }
+        public Instructor Instructor { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
             if (id == null)
             {
-                return NotFound();
+                return NotFound("id");
             }
 
-            InstructorIndexData = await _context.InstructorIndexData.FirstOrDefaultAsync(m => m.ID == id);
+            Instructor = await _context.Instructor
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
 
-            if (InstructorIndexData == null)
+            if (Instructor == null)
             {
-                return NotFound();
+                return NotFound("Instructor");
             }
+
+            //InstructorIndexData = await _context.InstructorIndexData.FirstOrDefaultAsync(m => m.ID == id);
+
+            //if (InstructorIndexData == null)
+            //{
+            //    return NotFound("IndexData");
+            //}
+
+            PopulateAssignedCourseData(_context, Instructor);
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int? id, string[] selectedCourses)
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            _context.Attach(InstructorIndexData).State = EntityState.Modified;
+            var instructorToUpdate = await _context.Instructor
+                        .Include(i => i.OfficeAssignment)
+                        .Include(i => i.CourseAssignments)
+                            .ThenInclude(i => i.Course)
+                        .FirstOrDefaultAsync(s => s.ID == id);
 
-            try
+            if (await TryUpdateModelAsync<Instructor>(
+                instructorToUpdate,
+                "Instructor",
+                i => i.FirstMidName, i => i.LastName,
+                i => i.HireDate, i => i.OfficeAssignment))
             {
+                if (String.IsNullOrWhiteSpace(
+                    instructorToUpdate.OfficeAssignment?.Location))
+                {
+                    instructorToUpdate.OfficeAssignment = null;
+                }
+                UpdateInstructorCourses(_context, selectedCourses, instructorToUpdate);
                 await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!InstructorIndexDataExists(InstructorIndexData.ID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return RedirectToPage("./Index");
+            UpdateInstructorCourses(_context, selectedCourses, instructorToUpdate);
+            PopulateAssignedCourseData(_context, instructorToUpdate);
+            return Page();
         }
+
 
         private bool InstructorIndexDataExists(int id)
         {
